@@ -1,15 +1,17 @@
-# Graph Mining (MUTAG)
+# Graph Mining on MUTAG
 
-- Loads MUTAG dataset (HuggingFace)
-- Converts PyG graphs to NetworkX
-- Implements graph isomorphism
-- Computes topological descriptors
-- Runs classification (LogReg / Naive Bayes) + clustering (OPTICS)
-- Visualizes molecules and clusters
+This project explores classical graph mining techniques on the MUTAG dataset:
+- Ullmann subgraph isomorphism
+- Topological graph descriptors
+- Classification (Logistic Regression, Naive Bayes)
+- Unsupervised clustering (OPTICS)
+- Graph and cluster visualization
 
 ## Setup
 ```bash
 python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-
+python graph_iso.py
+python graph_desc.py
+python graph_ml.py
