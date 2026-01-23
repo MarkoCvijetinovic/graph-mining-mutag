@@ -16,7 +16,8 @@ from sklearn.model_selection import StratifiedKFold, cross_val_score
 from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import Pipeline
 from sklearn.decomposition import PCA
-from sklearn.cluster import KMeans, OPTICS
+from sklearn.cluster import OPTICS
+from sklearn.svm import SVC
 
 import matplotlib
 matplotlib.use("TkAgg") 
@@ -116,7 +117,7 @@ if __name__ == "__main__":
     FEATURE_COLS = [c for c in df.columns if c not in DROP_COLS]
 
 
-    # ---- Classification (Logistic Regression and Naive Bayes) ----
+    # ---- Classification (Logistic Regression, Naive Bayes and SVM) ----
 
     X = df[FEATURE_COLS]
     y = df["y"].values
@@ -137,6 +138,14 @@ if __name__ == "__main__":
 
     scores = cross_val_score(pipe, X, y, cv=cv, scoring="accuracy")
     print("Accuracy for GaussianNB:", round(scores.mean(), 2), "±", round(scores.std(), 2))
+
+    pipe = Pipeline([
+        ("scaler", StandardScaler()),
+        ("clf", SVC(kernel="rbf")),
+    ])
+
+    scores = cross_val_score(pipe, X, y, cv=cv, scoring="accuracy")
+    print("Accuracy for SVM:", round(scores.mean(), 2), "±", round(scores.std(), 2))
 
     # ---- Clusterization (OPTICS) ----
 
