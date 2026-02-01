@@ -3,6 +3,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Iterable, List, Optional, Sequence, Tuple, Dict
 
+from pathlib import Path
+
 import torch
 import networkx as nx
 import matplotlib.pyplot as plt
@@ -38,11 +40,63 @@ def blend_colors(base_color, highlight_color="gold", alpha=0.33):
 
 # ---- Dataset loading ----
 
-def load_mutag_pyg(split: str = "train") -> List[Data]:
+def _default_cache_path(split: str) -> Path:
+    # default cache location
+    return Path("data") / f"mutag_pyg_{split}.pt"
+
+
+def load_mutag_pyg(
+    split: str = "train",
+    *,
+    cache_path: Optional[str | Path] = None,
+    prefer_cache: bool = True,
+    save_to_cache: bool = True,
+) -> List[Data]:
     """
-    Load MUTAG from Hugging Face and return a list of PyTorch Geometric Data objects.
+    Load MUTAG as a list of PyTorch Geometric Data objects.
+
+    Strategy:
+      1) If prefer_cache=True and cache exists -> load from file (offline, fast).
+      2) Else try to download from Hugging Face.
+      3) Optionally save to cache for next runs.
+
+    Args:
+      split: "train" / "test" / etc (whatever HF dataset provides).
+      cache_path: path to .pt file (torch.save format). Default: data/mutag_pyg_{split}.pt
+      prefer_cache: if True, load from cache when available.
+      save_to_cache: if True, save downloaded dataset to cache.
+
+    Returns:
+      list[Data]
     """
-    dataset_hf = load_dataset("graphs-datasets/MUTAG")
+    cache_file = Path(cache_path) if cache_path is not None else _default_cache_path(split)
+
+    if prefer_cache and cache_file.exists():
+        try:
+            obj = torch.load(cache_file, map_location="cpu", weights_only=False)
+            if not isinstance(obj, list):
+                raise TypeError(f"Cache file {cache_file} does not contain a list.")
+            # very light validation
+            if len(obj) > 0 and not isinstance(obj[0], Data):
+                raise TypeError(f"Cache file {cache_file} list items are not PyG Data objects.")
+            return obj
+        except Exception as e:
+            # If cache is corrupted or from old version, log warning and try to download
+            print(f"[WARN] Failed to load cache '{cache_file}': {e}. Will try to download...")
+
+    # Fallback: download from HF
+    try:
+        dataset_hf = load_dataset("graphs-datasets/MUTAG")
+    except Exception as e:
+        raise RuntimeError(
+            "Could not download MUTAG from Hugging Face and no valid cache file was found.\n"
+            f"Cache expected at: {cache_file.resolve()}\n"
+            "Fix options:\n"
+            "  - Connect to internet once (hotspot) and rerun; it will cache for later.\n"
+            "  - Or manually copy a prepared cache file to that location.\n"
+            f"Original error: {e}"
+        ) from e
+
     if split not in dataset_hf:
         raise ValueError(f"Split '{split}' not found. Available splits: {list(dataset_hf.keys())}")
 
@@ -51,9 +105,20 @@ def load_mutag_pyg(split: str = "train") -> List[Data]:
         edge_index = torch.tensor(g["edge_index"], dtype=torch.long)
         x = torch.tensor(g["node_feat"], dtype=torch.float)
         y = torch.tensor(g["y"], dtype=torch.long)
-        data_list.append(Data(x=x, edge_index=edge_index, y=y))
-    return data_list
 
+        # (optional) Make sure y is 0-dim tensor if single value
+        if y.ndim > 0:
+            y = y.view(-1)
+            if y.numel() == 1:
+                y = y[0]
+
+        data_list.append(Data(x=x, edge_index=edge_index, y=y))
+
+    if save_to_cache:
+        cache_file.parent.mkdir(parents=True, exist_ok=True)
+        torch.save(data_list, cache_file)
+
+    return data_list
 
 # ---- Conversions ----
 
@@ -100,7 +165,8 @@ def draw_molecules_grid(
     atom_types: Sequence[str] = ATOM_TYPES,
     color_map: Optional[Dict[str, str]] = None,
     highlight_nodes: Optional[Dict[int, set[int]]] = None,
-    seed: int = 42,
+    # optional (seed for layout reproducibility)
+    seed: int = None,
     title_prefix: str = "Molecule",
     show: bool = True,
     save_path: Optional[str] = None
@@ -138,7 +204,7 @@ def draw_molecules_grid(
             base_color = color_map.get(G.nodes[node]["atom"], "lightgray")
 
             if node in matched:
-                # Blended looks worse in my opinion 
+                # (optional) blended color for highlighting 
                 # blended = blend_colors(base_color, "gold", alpha=0.33)
                 node_colors.append(base_color)
                 node_sizes.append(900)
@@ -205,5 +271,5 @@ def draw_molecules_grid(
 
 # ---- quick demo ----
 if __name__ == "__main__":
-    data_list = load_mutag_pyg("train")
+    data_list = load_mutag_pyg("train", prefer_cache=True, save_to_cache=True)
     draw_molecules_grid(data_list[:12], n_rows=3, n_cols=4)
