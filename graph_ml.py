@@ -133,6 +133,7 @@ if __name__ == "__main__":
 
     pipe = Pipeline([
         ("scaler", StandardScaler()),
+        ("pca", PCA(n_components=0.95, random_state=42)),
         ("clf", GaussianNB()),
     ])
 
