@@ -12,6 +12,7 @@ This project explores classical graph mining techniques on the MUTAG dataset:
 python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
+python graph_utils.py
 python graph_iso.py
 python graph_desc.py
 python graph_ml.py
