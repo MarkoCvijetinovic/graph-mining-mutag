@@ -34,7 +34,7 @@ source .venv/bin/activate
 
 # Install dependencies
 pip install -r requirements.txt
-` ``` `
+```
 ## Running the experiments
 
 Each script contains a small demo in its `main` section.
@@ -51,4 +51,4 @@ python graph_desc.py
 
 # Perform classification (LogReg, Naive Bayes, SVM) and clustering (OPTICS)
 python graph_ml.py
-` ``` `
+```
