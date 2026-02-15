@@ -24,9 +24,18 @@ drawn from the MUTAG dataset.
 
 ## Setup
 ```bash
+# Create virtual environment
 python -m venv .venv
+
+# Activate virtual environment (Linux/macOS)
 source .venv/bin/activate
+# Activate virtual environment (Windows)
+.venv\Scripts\activate
+
+# Install dependencies
 pip install -r requirements.txt
+
+# Run program
 python graph_utils.py
 python graph_iso.py
 python graph_desc.py
