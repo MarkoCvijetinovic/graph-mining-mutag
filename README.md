@@ -35,8 +35,19 @@ source .venv/bin/activate
 # Install dependencies
 pip install -r requirements.txt
 
-# Run program
+## Running the experiments
+
+Each script contains a small demo in its `main` section.
+
+```bash
+# Visualize sample molecules from MUTAG
 python graph_utils.py
+
+# Run Ullmann subgraph isomorphism and highlight matches
 python graph_iso.py
+
+# Extract topological descriptors and generate feature table
 python graph_desc.py
+
+# Perform classification (LogReg, Naive Bayes, SVM) and clustering (OPTICS)
 python graph_ml.py
