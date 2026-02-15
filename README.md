@@ -34,7 +34,7 @@ source .venv/bin/activate
 
 # Install dependencies
 pip install -r requirements.txt
-
+```
 ## Running the experiments
 
 Each script contains a small demo in its `main` section.
