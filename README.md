@@ -24,6 +24,10 @@ drawn from the MUTAG dataset.
 
 ## Setup
 ```bash
+# Clone repository
+git clone https://github.com/MarkoCvijetinovic/graph-mining-mutag.git
+cd graph-mining-mutag
+
 # Create virtual environment
 python -m venv .venv
 
